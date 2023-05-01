@@ -1,0 +1,41 @@
+pipeline{
+    agent any
+    tools {
+        maven 'mvn'
+    }
+    stages{
+        stage("Test"){
+            steps{
+                sh 'mvn test'
+                //sh 'mvn --version'
+            }    
+        }
+        stage("Build"){
+            steps{
+                sh 'mvn package'
+                //echo "=======Build============="
+            }
+        }
+        stage("Deploy on Test Server"){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: '7ccb422e-6e22-47db-aaa1-830c1dc9427a', path: '', url: 'http://192.168.216.155:8080')], contextPath: '/app', war: '**/*.war'
+            }
+        }
+        stage("Deploy on Prod Server"){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: '6fe4ce2f-727b-4ce7-9004-e711daf3e28a', path: '', url: 'http://192.168.216.154:8080')], contextPath: '/app', war: '**/*.war'
+            }
+        }
+    }
+    post{
+        always{
+            echo "========always========"
+        }
+        success{
+            echo "========pipeline executed successfully ========"
+        }
+        failure{
+            echo "========pipeline execution failed========"
+        }
+    }
+}
